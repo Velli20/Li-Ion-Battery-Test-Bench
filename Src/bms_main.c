@@ -73,15 +73,15 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
     result= BMS_RESULT_OK;
 
     // Make sure SD card is inserted.
-
+    
     if ( BSP_SD_IsDetected() != SD_PRESENT ) 
         return (BMS_RESULT_ERROR);
 
     // Link the SD card I/O driver.
-
-	memset(sd_path, 0, sizeof(sd_path));
-	if ( FATFS_LinkDriver(&SD_Driver, sd_path) != FR_OK ) 
-		return (BMS_RESULT_ERROR);
+    
+    memset(sd_path, 0, sizeof(sd_path));
+    if ( FATFS_LinkDriver(&SD_Driver, sd_path) != FR_OK )
+        return (BMS_RESULT_ERROR);
 
     // Register the file system object to the FatFs module.
 
@@ -143,7 +143,7 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
     }
 
     // Write data to file.
-
+    
     if ( f_write(&file, data_point_string, strnlen(data_point_string, sizeof(data_point_string)), &byteswritten) != FR_OK )
 	{
         result= BMS_RESULT_ERROR;
@@ -156,8 +156,8 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
     f_close(&file);
 
     // Unlink driver.
-
-	FATFS_UnLinkDriver(sd_path);
+    
+    FATFS_UnLinkDriver(sd_path);
 
     return (result);
 }
