@@ -136,5 +136,9 @@ uint8_t ui_add_widget(UI_HANDLE* ui_handle,
 
 WIDGET* ui_find_widget_with_id(UI_HANDLE* ui_handle,
                                uint16_t   widget_id);
-                               
+
+// ui_free_widget_list
+
+uint8_t ui_free_widget_list(UI_HANDLE* ui_handle);
+
 #endif

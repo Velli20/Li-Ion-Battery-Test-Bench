@@ -7,7 +7,7 @@
 #include "ethernetif.h"
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
-#include "httpserver-netconn.h"
+#include "server.h"
 #include "log.h"
 
 // User interface includes
@@ -20,11 +20,6 @@
 #include "ui_stop_button.h"
 #include "ui_stop_button_pressed.h"
 #endif
-
-// Defines
-
-#define START_BUTTON_ID                         0x1
-#define STOP_BUTTON_ID                          0x2
 
 // Variables
 
@@ -136,49 +131,9 @@ static void configure_bms_ui(UI_HANDLE* ui_handle)
 }
 #endif
 
-// network_interface_config
-
-static void network_interface_config(struct netif* gnetif)
-{ 
-    ip_addr_t ipaddr;
-    ip_addr_t netmask;
-    ip_addr_t gw;
- 
-#ifdef USE_DHCP
-    ip_addr_set_zero_ip4(&ipaddr);
-    ip_addr_set_zero_ip4(&netmask);
-    ip_addr_set_zero_ip4(&gw);
-#else
-    IP_ADDR4(&ipaddr,IP_ADDR0,IP_ADDR1,IP_ADDR2,IP_ADDR3);
-    IP_ADDR4(&netmask,NETMASK_ADDR0,NETMASK_ADDR1,NETMASK_ADDR2,NETMASK_ADDR3);
-    IP_ADDR4(&gw,GW_ADDR0,GW_ADDR1,GW_ADDR2,GW_ADDR3);
-#endif
-    
-    // Initialize lwIP network interface.
-
-    DEBUG_ASSERT(netif_add(gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input) != 0);
-  
-    // Registers the default network interface.
-
-    netif_set_default(gnetif);
-  
-    if ( netif_is_link_up(gnetif) )
-    {
-        // When the netif is fully configured this function must be called.
-
-        netif_set_up(gnetif);
-    }
-    else
-    {
-        // When the netif link is down this function must be called.
-
-        netif_set_down(gnetif);
-    }
-}
-
 // UI thread
 
-//#if defined(WITH_BMS_USER_INTERFACE) 
+#if defined(WITH_BMS_USER_INTERFACE) 
 static void ui_thread(void const* argument)
 {
     BMS_DATA*    bms_data;
@@ -271,11 +226,15 @@ static void ui_thread(void const* argument)
 
     DEBUG_ASSERT(osMessageDelete(ui_thread_queue) == osOK);
 
+    // Free widget resources.
+
+    DEBUG_ASSERT(ui_free_widget_list(&ui_handle) == UI_RC_OK);
+
     // Terminate UI thread.
 
     osThreadTerminate(NULL);
 }
-//#endif
+#endif
 
 
 // main_thread
@@ -315,25 +274,22 @@ void main_thread(void const* argument)
 
     tcpip_init(NULL, NULL);
 
-    // Initialize the LwIP stack.
-
-    network_interface_config(&gnetif);
-
     // Initialize webserver.
 
-    http_server_netconn_init();
+    http_server_netconn_init(&gnetif, &bms_data);
 
     // Start DHCP Client.
 
     osThreadDef(DHCP, dhcp_connect_thread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE* 4);
     osThreadCreate(osThread(DHCP), &gnetif);
 
-    bms_data.bms_cycle= 0;
-    bms_data.bms_state= BMS_STATE_RESET;
-    bms_data.cell_voltage[0]= BMS_CELL_VOLTAGE_MIN;
-    bms_data.cell_voltage[1]= BMS_CELL_VOLTAGE_MIN;
-    bms_data.cell_voltage[2]= BMS_CELL_VOLTAGE_MIN;
-    bms_data.cell_voltage[3]= BMS_CELL_VOLTAGE_MIN;
+    bms_data.bms_cycle=         0;
+    bms_data.bms_state=         BMS_STATE_RESET;
+    bms_data.bms_simulate_data= BMS_FUNCTION_STATE_ENABLE;
+    bms_data.cell_voltage[0]=   BMS_CELL_VOLTAGE_MIN;
+    bms_data.cell_voltage[1]=   BMS_CELL_VOLTAGE_MIN;
+    bms_data.cell_voltage[2]=   BMS_CELL_VOLTAGE_MIN;
+    bms_data.cell_voltage[3]=   BMS_CELL_VOLTAGE_MIN;
 
  #if defined(WITH_BMS_USER_INTERFACE)
     osMessagePut(ui_thread_queue, CMSIS_OS_EVENT_BMS_STATE_CHANGED, osWaitForever);
@@ -347,25 +303,34 @@ void main_thread(void const* argument)
         event= osMessageGet(main_thread_queue, 1000);
         if ( event.status == osEventMessage )
         {
-            // Read message.
+            // Start battery stack test cycle.
 
             if ( event.value.v == CMSIS_OS_EVENT_START_BUTTON_CLICKED )
-            {
-                // Start battery stack test cycle.
-
                 DEBUG_ASSERT(bms_start_test_cycle(&bms_data) == BMS_RESULT_OK);
-            }
-            else if ( event.value.v == CMSIS_OS_EVENT_STOP_BUTTON_CLICKED )
-            {
-                // Abort test cycle.
 
+            // Abort test cycle.
+
+            else if ( event.value.v == CMSIS_OS_EVENT_STOP_BUTTON_CLICKED )
                 DEBUG_ASSERT(bms_stop_test_cycle(&bms_data) == BMS_RESULT_OK);
-            }
+
+            // Set bms simulation on.
+
+            else if ( event.value.v == CMSIS_OS_EVENT_BMS_DATA_SIMULATION_ON )
+                DEBUG_ASSERT(bms_set_simulation_on(&bms_data, BMS_FUNCTION_STATE_ENABLE) == BMS_RESULT_OK);
+
+            // Set bms simulation off.
+
+            else if ( event.value.v == CMSIS_OS_EVENT_BMS_DATA_SIMULATION_OFF )
+                DEBUG_ASSERT(bms_set_simulation_on(&bms_data, BMS_FUNCTION_STATE_DISABLE) == BMS_RESULT_OK);
         }
 
         // Run BMS.
 
         bms_run(&bms_data, &bms_ic);
+
+        // Notify http client.
+
+        http_server_send_event_to_client(1);
 
         // Signal UI thread if bms state has been changed.
 
@@ -376,7 +341,6 @@ void main_thread(void const* argument)
             osMessagePut(ui_thread_queue, CMSIS_OS_EVENT_BMS_STATE_CHANGED, osWaitForever);
         }
 #endif
-
     }
 
     // Delete message queue.

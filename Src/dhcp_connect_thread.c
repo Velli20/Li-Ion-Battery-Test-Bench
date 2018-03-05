@@ -122,7 +122,7 @@ void dhcp_connect_thread(void const* argument)
     ui_display_status_bar_string((uint8_t*)status_text);
 
 #if defined(WITH_DEBUG_LOG) 
-    DEBUG_LOG(status_text);
+    DEBUG_LOG((char *)status_text);
 #endif
 
     end_thread:

@@ -17,8 +17,6 @@
 #include "log.h"
 #endif
 
-#define WITH_BMS_SIMULATION
-
 // Macros
 
 #define MAX(x, y)(x >= y ? y : x)
@@ -77,13 +75,13 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
     // Make sure SD card is inserted.
 
     if ( BSP_SD_IsDetected() != SD_PRESENT ) 
-        return(BMS_RESULT_ERROR);
+        return (BMS_RESULT_ERROR);
 
     // Link the SD card I/O driver.
 
 	memset(sd_path, 0, sizeof(sd_path));
 	if ( FATFS_LinkDriver(&SD_Driver, sd_path) != FR_OK ) 
-		return(BMS_RESULT_ERROR);
+		return (BMS_RESULT_ERROR);
 
     // Register the file system object to the FatFs module.
 
@@ -161,7 +159,7 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
 
 	FATFS_UnLinkDriver(sd_path);
 
-    return(result);
+    return (result);
 }
 
 // bms_charge_cells
@@ -170,7 +168,7 @@ static inline void bms_charge_cells(uint8_t functional_state)
 {
     // Set charging relay on/off.
 
-    HAL_GPIO_WritePin(BMS_CHARGE_GPIO_PORT, BMS_CHARGE_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    HAL_GPIO_WritePin(BMS_CHARGE_GPIO_PORT, BMS_CHARGE_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 // bms_discharge_cells
@@ -179,10 +177,10 @@ static inline void bms_discharge_cells(uint8_t functional_state)
 {
     // Set all discharge relays on/off.
 
-    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_1_GPIO_PORT, BMS_DISCHARGE_LOAD_1_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_2_GPIO_PORT, BMS_DISCHARGE_LOAD_2_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_3_GPIO_PORT, BMS_DISCHARGE_LOAD_3_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_4_GPIO_PORT, BMS_DISCHARGE_LOAD_4_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_1_GPIO_PORT, BMS_DISCHARGE_LOAD_1_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_2_GPIO_PORT, BMS_DISCHARGE_LOAD_2_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_3_GPIO_PORT, BMS_DISCHARGE_LOAD_3_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BMS_DISCHARGE_LOAD_4_GPIO_PORT, BMS_DISCHARGE_LOAD_4_GPIO_PIN, functional_state == BMS_FUNCTION_STATE_ENABLE ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 // bms_init_relay_pins
@@ -194,8 +192,8 @@ static void bms_init_relay_pins(void)
     // Configure GPIO pins that are controlling relays used for
     // charging and discharging batteries.
 
-    gpio_init_structure.Mode=  GPIO_MODE_OUTPUT_OD;
-    gpio_init_structure.Pull=  GPIO_NOPULL;
+    gpio_init_structure.Mode=  GPIO_MODE_OUTPUT_PP;
+    gpio_init_structure.Pull=  GPIO_PULLUP;
     gpio_init_structure.Speed= GPIO_SPEED_HIGH;
 
     // Discharge relay 1 pin initialization.
@@ -315,25 +313,20 @@ static uint8_t bms_is_discharging_complete(BMS_DATA* bms_data,
 static uint8_t bms_read_data(BMS_DATA*  bms_data,
                              cell_asic* bms_ic)
 {
-#if defined(WITH_BMS_SIMULATION)
     static float cell_v_1;
     static float cell_v_2;
     static float cell_v_3;
     static float cell_v_4;
     float        mult;
-#else
-    uint8_t channels;
-    int8_t  error;
-#endif
+    uint8_t      channels;
+    int8_t       error;
 
     if ( !bms_ic || !bms_data )
         return (BMS_RESULT_ERROR);
 
-#if defined(WITH_BMS_SIMULATION)
+    // Simulate data coming from DC2259A board.
 
-    // TODO: Simulate data coming from DC2259A board.
-
-    if ( bms_data->bms_state == BMS_STATE_CHARGING || bms_data->bms_state == BMS_STATE_DISCHARGING )
+    if ( bms_data->bms_simulate_data && (bms_data->bms_state == BMS_STATE_CHARGING || bms_data->bms_state == BMS_STATE_DISCHARGING) )
     {
         mult= bms_data->bms_state == BMS_STATE_DISCHARGING ? 1.0f : -1.0f;
 
@@ -347,7 +340,9 @@ static uint8_t bms_read_data(BMS_DATA*  bms_data,
         bms_data->cell_voltage[2]= cell_v_3;
         bms_data->cell_voltage[3]= cell_v_4;
     }
-#else
+
+    if ( bms_data->bms_simulate_data )
+        return (BMS_RESULT_OK);
 
     wakeup_idle(1);
     LTC6811_adcv(MD_7KHZ_3KHZ, DCP_DISABLED, CELL_CH_ALL);
@@ -374,7 +369,6 @@ static uint8_t bms_read_data(BMS_DATA*  bms_data,
     bms_data->cell_voltage[2]= (bms_ic->cells.c_codes[channels-3]*0.0001);
     bms_data->cell_voltage[3]= (bms_ic->cells.c_codes[channels-4]*0.0001);
 
-#endif
     return (BMS_RESULT_OK);
 }
 
@@ -390,6 +384,19 @@ static void bms_error_handler(BMS_DATA* bms_data)
 
     if ( bms_data )
         bms_data->bms_state= BMS_STATE_STOPPED;
+}
+
+// bms_set_simulation_on
+
+uint8_t bms_set_simulation_on(BMS_DATA* bms_data,
+                              uint8_t   functional_state)
+{
+    if ( !bms_data )
+        return (BMS_RESULT_ERROR);
+
+    bms_data->bms_simulate_data= functional_state;
+
+    return (BMS_RESULT_OK);
 }
 
 // bms_start_test_cycle

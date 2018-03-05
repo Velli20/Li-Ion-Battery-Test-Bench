@@ -4,12 +4,7 @@
 #include "cmsis_os.h"
 #include "ethernetif.h"
 #include "log.h"
-#include "ff_gen_drv.h"
-#include "sd_diskio.h"
 #include "main.h"
-#include "LTC681x.h"
-#include "LTC6811.h"
-#include "bms_hardware.h"
 #include "stm32f7xx_rtc.h"
 #include "ui.h"
 
@@ -124,76 +119,6 @@ static void MPU_Config(void)
     HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
-static void print_cells(cell_asic bms_ic[])
-{
-    uint8_t current_ic;
-    uint8_t i;
-
-    printf("Cells, ");
-    for ( i= 0; i<bms_ic[0].ic_reg.cell_channels; i++ )
-        printf("%.4f,", bms_ic[0].cells.c_codes[i]*0.0001);
-
-    printf("\n");
-}
-
-// DC2259A_TestThread
-
-static void DC2259A_TestThread(void const* argument)
-{
-    cell_asic bms_ic[1];
-    int8_t    error;
-
-    DC2259A_Init();
-    
-    LTC681x_init_cfg(1, bms_ic);
-    LTC6811_reset_crc_count(1, bms_ic);
-    LTC6811_init_reg_limits(1, bms_ic);
-
-    // Write configuration register.
-
-#if defined(WITH_DEBUG_LOG)
-    DEBUG_LOG("LTC6811 write configuration");
-#endif
-    wakeup_sleep(1);
-    LTC6811_wrcfg(1, bms_ic);
-
-    // Read configuration register.
-    
-#if defined(WITH_DEBUG_LOG)
-    DEBUG_LOG("LTC6811 read configuration");
-#endif
-    wakeup_idle(1);
-    error= LTC6811_rdcfg(1, bms_ic);
-    if ( error == -1 )
-    {
-#if defined(WITH_DEBUG_LOG)
-        DEBUG_LOG("A PEC error was detected while reading LTC6811 configuration");
-#endif
-        error= 0;
-    }
-
-    // Read Cell Voltage Registers
-
-    wakeup_idle(1);
-    LTC6811_adcv(MD_7KHZ_3KHZ, DCP_DISABLED, CELL_CH_ALL);
-    LTC6811_pollAdc();
-    wakeup_idle(1);
-    error = LTC6811_rdcv(0, 1, bms_ic); // Set to read back all cell voltage registers
-    if ( error == -1 )
-    {
-#if defined(WITH_DEBUG_LOG)
-        DEBUG_LOG("A PEC error was detected while reading LTC6811 voltage registers");
-#endif
-        error= 0;
-    }
-    print_cells(bms_ic);
-
-#if defined(WITH_DEBUG_LOG)
-    DEBUG_LOG("Terminate DC2259A_TestThread");
-#endif
-    osThreadTerminate(osThreadGetId());
-}
-
 // main
 
 int main(void)
@@ -234,11 +159,6 @@ int main(void)
 
     osThreadDef(Main, main_thread, osPriorityBelowNormal, 0, configMINIMAL_STACK_SIZE * 20);
     osThreadCreate(osThread(Main), NULL);
-
-    // Init DC2259A test thread.
-
-    // osThreadDef(DC2259A_thread, DC2259A_TestThread, osPriorityNormal, 0, 8 * configMINIMAL_STACK_SIZE);
-    // osThreadCreate(osThread(DC2259A_thread), NULL);
 
     // Start scheduler.
 
