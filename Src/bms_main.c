@@ -282,7 +282,7 @@ static uint8_t bms_is_discharging_complete(BMS_DATA* bms_data,
 {
     uint8_t i;
 
-    if ( !bms_data || cell < 0 || cell > BMS_ALL_CELLS )
+    if ( !bms_data || cell > BMS_ALL_CELLS )
         return (BMS_RESULT_ERROR);
     
     // Check all cells.

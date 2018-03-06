@@ -101,7 +101,6 @@ void cmd_68(uint8_t tx_cmd[2])
 {
   uint8_t cmd[4];
   uint16_t cmd_pec;
-  uint8_t md_bits;
 
   cmd[0] = tx_cmd[0];
   cmd[1] =  tx_cmd[1];
@@ -1298,7 +1297,6 @@ void LTC681x_run_openwire(uint8_t total_ic, cell_asic ic[])
   cell_asic pullUp_cell_codes[total_ic];
   cell_asic pullDwn_cell_codes[total_ic];
   cell_asic openWire_delta[total_ic];
-  int8_t error;
 
   wakeup_sleep(total_ic);
   LTC681x_adow(MD_7KHZ_3KHZ,PULL_UP_CURRENT);
@@ -1307,7 +1305,7 @@ void LTC681x_run_openwire(uint8_t total_ic, cell_asic ic[])
   LTC681x_adow(MD_7KHZ_3KHZ,PULL_UP_CURRENT);
   LTC681x_pollAdc();
   wakeup_idle(total_ic);
-  error = LTC681x_rdcv(0, total_ic,pullUp_cell_codes);
+  LTC681x_rdcv(0, total_ic,pullUp_cell_codes);
 
   wakeup_idle(total_ic);
   LTC681x_adow(MD_7KHZ_3KHZ,PULL_DOWN_CURRENT);
@@ -1316,7 +1314,7 @@ void LTC681x_run_openwire(uint8_t total_ic, cell_asic ic[])
   LTC681x_adow(MD_7KHZ_3KHZ,PULL_DOWN_CURRENT);
   LTC681x_pollAdc();
   wakeup_idle(total_ic);
-  error = LTC681x_rdcv(0, total_ic,pullDwn_cell_codes);
+  LTC681x_rdcv(0, total_ic,pullDwn_cell_codes);
 
   for (int cic=0; cic<total_ic; cic++)
   {
@@ -1687,8 +1685,6 @@ int8_t LTC681x_rdpwm(uint8_t total_ic, //Number of ICs in the system
                      cell_asic ic[]
                     )
 {
-  const uint8_t BYTES_IN_REG = 8;
-
   uint8_t cmd[4];
   uint8_t read_buffer[256];
   int8_t pec_error = 0;

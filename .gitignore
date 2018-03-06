@@ -1,6 +1,9 @@
 .vscode/
-BatteryMonitor/
 *.o
+*.d
+*.bin
+*.elf
+Li-Ion-Battery-Test-Bench.link_script.ld
 
 
 

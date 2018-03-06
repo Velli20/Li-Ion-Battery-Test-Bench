@@ -7,13 +7,19 @@
 #include "lwip/opt.h"
 #include "lwip/arch.h"
 #include "lwip/api.h"
-#include "lwip/apps/fs.h"
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "ethernetif.h"
 #include "server.h"
 #include "cmsis_os.h"
 #include "log.h"
+
+// Web interface html files
+
+#include "web_interface_home_html.h"
+#include "web_interface_home_js.h"
+#include "web_interface_styles_css.h"
+#include "web_interface_not_found_html.h"
 
 // Variables
 
@@ -78,7 +84,6 @@ static uint8_t http_server_serve(struct netconn* conn,
                                  BMS_DATA*       bms_data) 
 {
     struct netbuf* inbuf;
-    struct fs_file file;
     char*          buf;
     err_t          recv_err;
     uint16_t       buflen;
@@ -110,25 +115,19 @@ static uint8_t http_server_serve(struct netconn* conn,
 
     if ( IS_HTTP_GET_COMMAND(buf, "home.html") || (strncmp(buf, "GET / ", 6) == 0) ) 
     {
-        fs_open(&file, "/home.html"); 
-        netconn_write(conn, (const unsigned char*)(file.data), (size_t)file.len, NETCONN_NOCOPY);
-        fs_close(&file);
+        netconn_write(conn, home_html, sizeof(home_html)-1, NETCONN_NOCOPY);
     }
 
     else if ( IS_HTTP_GET_COMMAND(buf, "styles.css") )
     {         
-        fs_open(&file, "/styles.css");         
-        netconn_write(conn, (const unsigned char*)(file.data), (size_t)file.len, NETCONN_NOCOPY);
-        fs_close(&file);
+        netconn_write(conn, styles_css, sizeof(styles_css)-1, NETCONN_NOCOPY);
     }
 
     // Check if home page javascript file is requested.
 
     else if ( IS_HTTP_GET_COMMAND(buf, "home.js") )
     {    
-        fs_open(&file, "/home.js");
-        netconn_write(conn, (const unsigned char*)(file.data), (size_t)file.len, NETCONN_NOCOPY);
-        fs_close(&file);   
+        netconn_write(conn, home_js, sizeof(home_js)-1, NETCONN_NOCOPY);
     }
 
     // Check if BMS data json file is requested.
@@ -205,9 +204,7 @@ static uint8_t http_server_serve(struct netconn* conn,
 
     else 
     {   
-        fs_open(&file, "/404.html"); 
-        netconn_write(conn, (const unsigned char*)(file.data), (size_t)file.len, NETCONN_NOCOPY);
-        fs_close(&file);
+        netconn_write(conn, not_found_html, sizeof(not_found_html)-1, NETCONN_NOCOPY);
 #if defined(WITH_DEBUG_LOG)
         DEBUG_LOG("Request not recoqnized. Header:\n%s\n", buf);
 #endif
