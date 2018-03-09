@@ -16,9 +16,14 @@ $ make -f .\Makefile
 
 ### Pinout
 
-| STM32F746G-DISCO | DC2259A |
+| STM32F746G-DISCO PIN| Description |
 | ------ | ------ |
-| D13 | SPI SCK |  
-| D12 | SPI MISO |
-| D11 | SPI MOSI |
-| D10 | SPI CS |
+| D13 | LTC6811 SPI SCK |  
+| D12 | LTC6811 SPI MISO |
+| D11 | LTC6811 SPI MOSI |
+| D10 | LTC6811 SPI CS |
+| D9 | Cell discharge relay 1 |
+| D8 | Cell discharge relay 2 |
+| D7 | Cell discharge relay 3 |
+| D6 | Cell discharge relay 4 |
+| D5 | Charging relay |
