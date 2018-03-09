@@ -7,6 +7,12 @@
 #define SERVER_RESULT_ERROR                 ((uint8_t)0x00)
 #define SERVER_RESULT_KEEP_CONNECTION_ALIVE ((uint8_t)0x03)
 
+#define HTTP_RESPONSE_HEADER_TEXT_FILE    \
+    "HTTP/1.1 200 OK\r\n"                 \
+    "Access-Control-Allow-Origin: *\r\n"  \
+    "Content-Type: application/text\r\n"  \
+    "\r\n\r\n"
+
 // BMS_DATA struct forward declaration
 
 typedef struct bms_data BMS_DATA;
@@ -29,5 +35,9 @@ uint8_t server_write_bms_json_data(struct netconn* conn,
 
 uint8_t server_write_cycle_result_text_file(struct netconn* conn,
                                             uint32_t        cycle);
+
+// server_write_file_list_json_data
+
+uint8_t server_write_file_list_json_data(struct netconn* conn);
 
 #endif

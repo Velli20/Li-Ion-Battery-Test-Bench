@@ -15,17 +15,10 @@
 
     <div class="card">
         <div class="container">
-
             <h2 class="sub_title">CONTROLS</h2>
-
-            <!-- Test cycle start button -->
             <button id="start_button" class="button button_start" onclick="bms_start_cycle_test()">START</button>
-
-            <!-- Test cycle stop button -->
             <button id="stop_button" class="button button_stop" onclick="bms_stop_cycle_test()">STOP</button>
-
             <div>
-                <!-- Simulate data checkbox -->
                 <label class="switch">
                     <input id="bms_simulate_toggle" type="checkbox" onclick="bms_simulate_toggle_event()">
                     <span class="slider round"></span>
@@ -34,7 +27,6 @@
             </div>
         </div>
     </div>
-
     <div class="card">
         <div class="container">
             <h2 class="sub_title">CELL VOLTAGE</h2>
@@ -44,15 +36,16 @@
             <h2 class="voltage_text" id='cell_4_voltage'>Cell 4:</h2>
         </div>
     </div>
-
     <div class="card">
-
         <div class="container">
+            <h2 class="sub_title">RTOS tasks</h2>
+            <div id="rtos_status" class="system_info_container">
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div id="file_list" class="container ">
             <h2 class="sub_title">TEST RESULTS</h2>
-            <ul id="file_list" class="file_list_text">
-                <li><a href="CYCLE_0.txt">CYCLE_0.txt</a></li>
-                <li><a href="CYCLE_1.txt">CYCLE_1.txt</a></li>
-            </ul>
         </div>
     </div>
 </body>

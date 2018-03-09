@@ -6,6 +6,10 @@ function onLoadEvent() {
         // Read bms data.
 
         read_bms_data();
+
+        // Update task list.
+
+        load_rtos_tasks();
     };
 
     source.onerror = function(error) {
@@ -13,6 +17,38 @@ function onLoadEvent() {
     };
 
     read_bms_data();
+
+    load_file_list();
+
+    load_rtos_tasks();
+}
+
+function load_file_list() {
+    get_json_data_file("./test_results.json", function(text) {
+        var json_data = JSON.parse(text);
+
+        var i;
+
+        for (i = 0; i < json_data.file_count; i++) {
+            var container = document.createElement('div');
+            container.className = "file_list_item_container";
+
+            var link = document.createElement('a');
+            link.textContent = "CYCLE_" + i + ".txt";
+            link.href = "CYCLE_" + i + ".txt"
+            link.className = "file_list_text";
+
+            container.appendChild(link);
+
+            document.getElementById("file_list").appendChild(container);
+        }
+    });
+}
+
+function load_rtos_tasks() {
+    get_json_data_file("./rtos_tasks.text", function(text) {
+        document.getElementById("rtos_status").textContent = "Name    State  Priority  Stack   Task number\n\n" + text;
+    });
 }
 
 function get_json_data_file(file, callback) {
@@ -44,8 +80,8 @@ function read_bms_data() {
 
         var bms_state = json_data.state;
 
-        document.getElementById("start_button").style.visibility = bms_state < 2 ? "visible" : "hidden";
-        document.getElementById("stop_button").style.visibility = bms_state > 1 ? "visible" : "hidden";
+        document.getElementById("start_button").style.display = bms_state < 2 ? "inline" : "none";
+        document.getElementById("stop_button").style.display = bms_state > 1 ? "inline" : "none";
 
         var simulation_on = json_data.bms_simulate;
 

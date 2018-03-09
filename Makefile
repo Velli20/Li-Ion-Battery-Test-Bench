@@ -203,6 +203,7 @@ OBJECTS += Src/main_thread.o
 OBJECTS += Src/server.o
 OBJECTS += Src/server_write_bms_json_data.o
 OBJECTS += Src/server_write_cycle_result_text_file.o
+OBJECTS += Src/server_write_file_list_json_data.o
 OBJECTS += Src/stm32f7xx_hal_msp.o
 OBJECTS += Src/stm32f7xx_hal_timebase_tim.o
 OBJECTS += Src/stm32f7xx_it.o

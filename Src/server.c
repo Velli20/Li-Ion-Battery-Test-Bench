@@ -55,6 +55,45 @@ static osMutexId       server_mutex;
     "Connection: keep-alive\r\n"          \
     "\r\n"                                 
 
+// http_server_write_rtos_task_stats
+
+static uint8_t http_server_write_rtos_task_stats(struct netconn* conn)
+{
+    portCHAR task_list_buffer[400];
+    err_t    result;
+
+    if ( !conn )
+        return (SERVER_RESULT_ERROR);
+
+    // Write header.
+
+    result= netconn_write(conn, HTTP_RESPONSE_HEADER_TEXT_FILE, strlen((char*)HTTP_RESPONSE_HEADER_TEXT_FILE), NETCONN_NOCOPY);
+    if ( result != ERR_OK )
+    {
+        DEBUG_LOG("Error occured while writing HTTP header");
+        return (SERVER_RESULT_ERROR);
+    }
+
+    // Get task list.
+
+    if ( osThreadList((unsigned char *)(task_list_buffer)) != osOK )
+    {
+        DEBUG_LOG("Error occured while accuiring task list");
+        return (SERVER_RESULT_ERROR);
+    }
+
+    // Write task list.
+
+    result= netconn_write(conn, task_list_buffer, strlen((char*)task_list_buffer), NETCONN_COPY);
+    if ( result != ERR_OK )
+    {
+        DEBUG_LOG("Error occured while writing task list");
+        return (SERVER_RESULT_ERROR);
+    }
+
+    return (SERVER_RESULT_OK);
+}
+
 // http_server_begin_sse
 
 static uint8_t http_server_begin_sse(struct netconn* conn)
@@ -135,6 +174,20 @@ static uint8_t http_server_serve(struct netconn* conn,
     else if ( IS_HTTP_GET_COMMAND(buf, "bms_data.json") )
     {    
         server_write_bms_json_data(conn, bms_data);
+    }
+
+    // Write file list.
+
+    else if ( IS_HTTP_GET_COMMAND(buf, "test_results.json") )
+    {
+        server_write_file_list_json_data(conn);
+    }
+
+    // Write RTOS task list.
+
+    else if ( IS_HTTP_GET_COMMAND(buf, "rtos_tasks.text") )
+    {
+        http_server_write_rtos_task_stats(conn);
     }
 
     // Check for SSE stream request.
