@@ -7,6 +7,7 @@
 #include "ethernetif.h"
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
+#include "lwip/dhcp.h"
 #include "server.h"
 #include "log.h"
 
@@ -361,5 +362,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     if ( GPIO_Pin == TS_INT_PIN && ui_thread_queue )
         osMessagePut(ui_thread_queue, CMSIS_OS_EVENT_TOUCH, osWaitForever);
+    
 }
 #endif

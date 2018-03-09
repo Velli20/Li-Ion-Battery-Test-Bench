@@ -5,6 +5,7 @@
 #include <string.h>
 #include "main.h"
 #include "stm32f7xx_rtc.h"
+#include "cmsis_os.h"
 
 // Includes for data log to file
 
@@ -54,6 +55,10 @@
 #define BMS_CHARGE_GPIO_PORT                   GPIOI
 #define BMS_CHARGE_GPIO_PIN                    GPIO_PIN_0
 
+// Variables
+
+extern osMutexId mass_storage_mutex;
+
 // bms_log_data_to_file
 
 static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
@@ -72,16 +77,30 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
     
     result= BMS_RESULT_OK;
 
+    // Try to obtain sd card mutex.
+    
+    if ( osMutexWait(mass_storage_mutex, 1000) != osOK )
+    {
+        DEBUG_LOG("Failed to accuire sd mutex");
+        return (BMS_RESULT_ERROR);
+    }
+        
     // Make sure SD card is inserted.
     
     if ( BSP_SD_IsDetected() != SD_PRESENT ) 
-        return (BMS_RESULT_ERROR);
+    {
+        result= BMS_RESULT_ERROR;
+        goto release_mutex;
+    }
 
     // Link the SD card I/O driver.
     
     memset(sd_path, 0, sizeof(sd_path));
     if ( FATFS_LinkDriver(&SD_Driver, sd_path) != FR_OK )
-        return (BMS_RESULT_ERROR);
+    {
+        result= BMS_RESULT_ERROR;
+        goto release_mutex;
+    }
 
     // Register the file system object to the FatFs module.
 
@@ -158,6 +177,13 @@ static uint8_t bms_log_data_to_file(BMS_DATA* bms_data)
     // Unlink driver.
     
     FATFS_UnLinkDriver(sd_path);
+
+    release_mutex:
+    
+    // Release mutex.
+    
+    if ( osMutexRelease(mass_storage_mutex) != osOK )
+        return (BMS_RESULT_ERROR);
 
     return (result);
 }
@@ -319,6 +345,7 @@ static uint8_t bms_read_data(BMS_DATA*  bms_data,
     static float cell_v_4;
     float        mult;
     uint8_t      channels;
+    uint8_t      i;
     int8_t       error;
 
     if ( !bms_ic || !bms_data )
@@ -369,6 +396,11 @@ static uint8_t bms_read_data(BMS_DATA*  bms_data,
     bms_data->cell_voltage[2]= (bms_ic->cells.c_codes[channels-3]*0.0001);
     bms_data->cell_voltage[3]= (bms_ic->cells.c_codes[channels-4]*0.0001);
 
+    printf("------------Data---------\n");
+    for ( i= 0; i < channels; i++ )
+    {
+        printf("cell=%d %.2f V \n\r", i, bms_data->cell_voltage[i]);
+    }
     return (BMS_RESULT_OK);
 }
 
@@ -483,10 +515,7 @@ uint8_t bms_run(BMS_DATA*  bms_data,
     if ( (bms_data->bms_state == BMS_STATE_CHARGING || bms_data->bms_state == BMS_STATE_DISCHARGING) && BSP_SD_IsDetected() == SD_PRESENT )
     {
         if ( bms_log_data_to_file(bms_data) == BMS_RESULT_ERROR )
-        {
-            bms_error_handler(bms_data);
-            return (BMS_RESULT_ERROR);
-        }
+            DEBUG_LOG("Failed to log bms data");
     }
 
     // Reset state. Initialize relay pins and peripherals

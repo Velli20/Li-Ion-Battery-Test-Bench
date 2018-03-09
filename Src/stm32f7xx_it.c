@@ -4,8 +4,9 @@
 #include "stm32f7xx_it.h"
 #include "main.h"
 #include "cmsis_os.h"
+#include "log.h"
 
-// Ethernet handle
+// Variables
 
 extern ETH_HandleTypeDef EthHandle;
 
@@ -38,3 +39,4 @@ void EXTI15_10_IRQHandler(void)
 {
     HAL_GPIO_EXTI_IRQHandler(TS_INT_PIN);
 }
+

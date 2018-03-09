@@ -169,10 +169,19 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
   GPIO_InitStructure.Pin =  GPIO_PIN_2 | GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStructure);
   
+  __HAL_ETH_MAGIC_PACKET_DETECTION_ENABLE(heth);
+
   /* Enable the Ethernet global Interrupt */
   HAL_NVIC_SetPriority(ETH_IRQn, 0x7, 0);
   HAL_NVIC_EnableIRQ(ETH_IRQn);
   
+  /* Enable wakeup interrupt */
+  // HAL_NVIC_SetPriority(ETH_WKUP_IRQn, 0x6, 0);
+  // HAL_NVIC_EnableIRQ(ETH_WKUP_IRQn);
+
+  // __HAL_ETH_WAKEUP_EXTI_ENABLE_IT();
+  // __HAL_ETH_WAKEUP_EXTI_GENERATE_SWIT();
+
   /* Enable ETHERNET clock  */
   __HAL_RCC_ETH_CLK_ENABLE();
 }

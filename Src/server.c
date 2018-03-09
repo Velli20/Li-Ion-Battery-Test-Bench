@@ -232,6 +232,7 @@ static void http_server_netconn_thread(void* arg)
     struct netconn* newconn;
     BMS_DATA*       bms_data;
     err_t           error;
+    uint8_t         result;
 
     bms_data= (BMS_DATA*)arg;
     DEBUG_ASSERT(bms_data);
@@ -282,15 +283,18 @@ static void http_server_netconn_thread(void* arg)
         
         // Try to obtain server mutex.
 
-        DEBUG_ASSERT(osMutexWait(server_mutex, 1000) == osOK);
+        DEBUG_ASSERT(osMutexWait(server_mutex, osWaitForever) == osOK);
 
         // Handle connection.
 
-        if ( http_server_serve(newconn, bms_data) != SERVER_RESULT_KEEP_CONNECTION_ALIVE )
+        result= http_server_serve(newconn, bms_data);
+        DEBUG_ASSERT(result == SERVER_RESULT_KEEP_CONNECTION_ALIVE || result == SERVER_RESULT_OK);
+
+        if ( result != SERVER_RESULT_KEEP_CONNECTION_ALIVE )
         {
             // Close connection and free its resources.
 
-            netconn_delete(newconn);
+            DEBUG_ASSERT(netconn_delete(newconn) == ERR_OK);
         }
 
         DEBUG_ASSERT(osMutexRelease(server_mutex) == osOK);
@@ -379,7 +383,7 @@ uint8_t http_server_send_event_to_client(uint8_t event)
     
     // Try to obtain server mutex.
 
-    if ( osMutexWait(server_mutex, 1000) != osOK )
+    if ( osMutexWait(server_mutex, osWaitForever) != osOK )
         return (SERVER_RESULT_ERROR);
 
     // Push data to browser.

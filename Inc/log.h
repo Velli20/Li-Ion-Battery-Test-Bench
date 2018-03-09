@@ -19,7 +19,7 @@
     {                                                                          \
         printf("in file=%s line=%d message=", __FILENAME__, __LINE__);         \
         printf((FORMAT), ##__VA_ARGS__);                                       \
-        printf("\n");                                                          \
+        printf("\n\r");                                                          \
     }                                                                          \
     while (0)
 #else

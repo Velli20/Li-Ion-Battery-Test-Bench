@@ -8,6 +8,10 @@
 #include "stm32f7xx_rtc.h"
 #include "ui.h"
 
+// Variables
+
+osMutexId mass_storage_mutex;
+
 // Error_Handler
 
 static void Error_Handler(void)
@@ -151,9 +155,14 @@ int main(void)
 
     Log_Config();
 
-    // Initialize the Real Time Clock
+    // Initialize the Real Time Clock.
 
     rtc_init();
+
+    // Initialize mass storage mutex.
+    
+    osMutexDef(sd_mutex);
+    mass_storage_mutex= osMutexCreate(osMutex(sd_mutex));
 
     // Init main thread.
 
@@ -164,7 +173,6 @@ int main(void)
 
     osKernelStart();
   
-    /* We should never get here as control is now taken by the scheduler */
     for( ;; );
 }
 

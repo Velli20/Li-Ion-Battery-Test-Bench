@@ -129,5 +129,5 @@ void dhcp_connect_thread(void const* argument)
 
     // Terminate DHCP thread.
 
-    osThreadTerminate(NULL);
+    osThreadTerminate(osThreadGetId());
 }

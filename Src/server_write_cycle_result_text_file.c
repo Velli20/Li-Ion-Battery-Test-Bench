@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "server.h"
 #include "log.h"
+#include "cmsis_os.h"
 
 // SD card interface includes
 
@@ -20,7 +21,12 @@
     "HTTP/1.1 200 OK\r\n"                 \
     "Access-Control-Allow-Origin: *\r\n"  \
     "Content-Type: application/text\r\n"  \
+    "Content-Length: %d\r\n"              \
     "\r\n\r\n"
+
+// Variables
+
+extern osMutexId mass_storage_mutex;
 
 // server_write_cycle_result_text_file
 
@@ -31,7 +37,7 @@ uint8_t server_write_cycle_result_text_file(struct netconn* conn,
     FIL      file;
     char     sd_path[4];
     char     file_path[15];
-    char     out_buffer[128];
+    char     out_buffer[256];
     uint32_t bytes_read;
     uint32_t bytes_written;
     uint32_t bytes_to_read;
@@ -41,16 +47,30 @@ uint8_t server_write_cycle_result_text_file(struct netconn* conn,
     if ( !conn )
         return (SERVER_RESULT_ERROR);
         
+    // Try to obtain sd card mutex.
+
+    if ( osMutexWait(mass_storage_mutex, 1000) != osOK )
+    {
+        DEBUG_LOG("Failed to accuire sd mutex");
+        return (SERVER_RESULT_ERROR);
+    }
+
     // Check that SD card is inserted.
 
-    if ( BSP_SD_IsDetected() != SD_PRESENT ) 
-        return (SERVER_RESULT_ERROR);
+    if ( BSP_SD_IsDetected() != SD_PRESENT )
+    {
+        result= SERVER_RESULT_ERROR;
+        goto release_mutex;
+    }
 
     // Link the SD card I/O driver.
     
     memset(sd_path, 0, sizeof(sd_path));
-    if ( FATFS_LinkDriver(&SD_Driver, sd_path) != FR_OK ) 
-        return (SERVER_RESULT_ERROR);
+    if ( FATFS_LinkDriver(&SD_Driver, sd_path) != FR_OK )
+    {
+        result= SERVER_RESULT_ERROR;
+        goto release_mutex;
+    }
 
     result= SERVER_RESULT_OK;
     
@@ -84,14 +104,20 @@ uint8_t server_write_cycle_result_text_file(struct netconn* conn,
         goto end;
     }
 
+    // Format header.
+
+    memset(out_buffer, 0, sizeof(out_buffer));
+    snprintf(out_buffer, sizeof(out_buffer), HTTP_BATTERY_DATA_RESPONSE_HEADER, file_size);
 
     // Write header.
 
-    if ( netconn_write(conn, HTTP_BATTERY_DATA_RESPONSE_HEADER, sizeof(HTTP_BATTERY_DATA_RESPONSE_HEADER)-1, NETCONN_NOCOPY) != ERR_OK )
+    if ( netconn_write(conn, out_buffer, strnlen(out_buffer, sizeof(out_buffer)), NETCONN_COPY) != ERR_OK )
     {
         result= SERVER_RESULT_ERROR;
         goto end;
     }
+
+    osDelay(200);
 
     // Split large files in parts.
 
@@ -126,7 +152,7 @@ uint8_t server_write_cycle_result_text_file(struct netconn* conn,
 
         bytes_written+= bytes_read;
 
-        DEBUG_LOG("Bytes written=%lu", bytes_written);
+        osDelay(200);
     }
     while ( bytes_written < file_size );
 
@@ -139,6 +165,13 @@ uint8_t server_write_cycle_result_text_file(struct netconn* conn,
     // Unlink driver.
     
     FATFS_UnLinkDriver(sd_path);
+
+    release_mutex:
+
+    // Release mutex.
     
+    if ( osMutexRelease(mass_storage_mutex) != osOK )
+        return (SERVER_RESULT_ERROR);
+
     return (result);
 }
