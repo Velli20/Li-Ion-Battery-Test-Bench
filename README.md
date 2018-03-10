@@ -1,4 +1,7 @@
 
+# Li-Ion Battery Test Bench
+
+This is a school project aimed to build system that can automatically charge and discharge Li-ion batteries at variable load. The purpose of this system is to study different battery types by monitoring cell voltage, temperature and current.
 
 ### Compiling
 
