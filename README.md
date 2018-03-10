@@ -28,6 +28,17 @@ $ make -f .\Makefile
 | D6 | Cell discharge relay 4 |
 | D5 | Charging relay |
 
+### Project pictures
+
+- Web interface used to control test bench
+
+<img src="https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/project_pictures/web_interface.jpg?raw=true?" width="800" >
+
+- Test bench
+
+
+<img src="https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/project_pictures/test_bench.jpg?raw=true" width="800" >
+
 # Libraries used in this project
 
 #### lwIP – A Lightweight TCP/IP stack 
