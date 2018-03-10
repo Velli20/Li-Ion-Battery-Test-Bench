@@ -29,6 +29,7 @@ $ make -f .\Makefile
 | D5 | Charging relay |
 
 # Libraries used in this project
+
 #### lwIP – A Lightweight TCP/IP stack 
 - https://savannah.nongnu.org/projects/lwip/
 - Licence: https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/Middlewares/Third_Party/LwIP/LWIP_LICENCE
@@ -40,5 +41,10 @@ $ make -f .\Makefile
 #### FreeRTOS – RTOS Kernel
 - https://www.freertos.org/
 - Licence: https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/Middlewares/Third_Party/FreeRTOS/License/license.txt
+
 #### STM32 HAL Driver
 - Licence: https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/Drivers/STM32F7xx_HAL_Driver/STM32_HAL_LICENCE
+
+#### Linear Technology – LTC6811-1 Multicell Battery Monitor
+- http://www.linear.com/product/LTC6811-1
+- Licence: https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/LTC6811/LTC6811_LICENCE
