@@ -5,7 +5,10 @@ This is a school project aimed to build system that can automatically charge and
 
 ### Compiling
 
-To build this project run Makefile. Make sure you have the GNU Arm Embedded Toolchain installed.
+- Download the GNU Arm Embedded Toolchain https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
+- On Windows download and install GNU Make https://www.gnu.org/software/make/ and add GnuWin32\bin to Windows environment variables path.
+
+To build this project navigate to project directory on shell and run Makefile.
 
 ```sh
 $ make -f .\Makefile
