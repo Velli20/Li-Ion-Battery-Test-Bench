@@ -14,7 +14,7 @@ To build this project navigate to project directory on shell and run Makefile.
 $ make -f .\Makefile
 ```
 
-### Flashing with ST-Link Utlity software
+### Flashing with ST-Link Utility software
 
 - Click on "External Loader" from the menu and select N25Q128A_STM32F746G-DISCO
 - Click on Target->Program and select "Li-Ion-Battery-Test-Bench.hex" under BUILD directory
