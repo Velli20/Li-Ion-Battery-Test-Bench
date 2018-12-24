@@ -1,14 +1,20 @@
 
+# Li-Ion Battery Test Bench
+
+This is a school project aimed to build system that can automatically charge and discharge Li-ion batteries at variable load. The purpose of this system is to study different battery types by monitoring cell voltage, temperature and current.
 
 ### Compiling
 
-To build this project run Makefile. Make sure you have the GNU Arm Embedded Toolchain installed.
+- Download the GNU Arm Embedded Toolchain https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
+- On Windows download and install GNU Make https://www.gnu.org/software/make/ and add GnuWin32\bin to Windows environment variables path.
+
+To build this project navigate to project directory on shell and run Makefile.
 
 ```sh
 $ make -f .\Makefile
 ```
 
-### Flashing with ST-Link Utlity software
+### Flashing with ST-Link Utility software
 
 - Click on "External Loader" from the menu and select N25Q128A_STM32F746G-DISCO
 - Click on Target->Program and select "Li-Ion-Battery-Test-Bench.hex" under BUILD directory
@@ -27,6 +33,17 @@ $ make -f .\Makefile
 | D7 | Cell discharge relay 3 |
 | D6 | Cell discharge relay 4 |
 | D5 | Charging relay |
+
+### Project pictures
+
+- Web interface used to control test bench
+
+<img src="https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/project_pictures/web_interface.jpg?raw=true?" width="800" >
+
+- Test bench
+
+
+<img src="https://github.com/Velli20/Li-Ion-Battery-Test-Bench/blob/master/project_pictures/test_bench.jpg?raw=true" width="800" >
 
 # Libraries used in this project
 
