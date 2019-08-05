@@ -15,7 +15,7 @@ osMutexId mass_storage_mutex;
 // Error_Handler
 
 static void Error_Handler(void)
-{    
+{
     while ( 1 )
     {
         ;;
@@ -24,7 +24,7 @@ static void Error_Handler(void)
 
 /**
   * @brief  System Clock Configuration
-  *         The system Clock is configured as follow : 
+  *         The system Clock is configured as follow :
   *            System Clock source            = PLL (HSE)
   *            SYSCLK(Hz)                     = 200000000
   *            HCLK(Hz)                       = 200000000
@@ -66,14 +66,14 @@ static void SystemClock_Config(void)
 
     if ( HAL_PWREx_EnableOverDrive() != HAL_OK )
         Error_Handler();
-  
+
     // Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 clocks dividers.
 
     RCC_ClkInitStruct.ClockType=      (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
     RCC_ClkInitStruct.SYSCLKSource=   RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider=  RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider= RCC_HCLK_DIV4;  
-    RCC_ClkInitStruct.APB2CLKDivider= RCC_HCLK_DIV2;  
+    RCC_ClkInitStruct.APB1CLKDivider= RCC_HCLK_DIV4;
+    RCC_ClkInitStruct.APB2CLKDivider= RCC_HCLK_DIV2;
 
     if ( HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK )
         Error_Handler();
@@ -97,11 +97,11 @@ static void CPU_CACHE_Enable(void)
 static void MPU_Config(void)
 {
     MPU_Region_InitTypeDef MPU_InitStruct;
-  
+
     // Disable the MPU.
 
     HAL_MPU_Disable();
-  
+
     // Configure the MPU attributes as Device for Ethernet Descriptors in the SRAM.
 
     MPU_InitStruct.Enable=           MPU_REGION_ENABLE;
@@ -137,18 +137,18 @@ int main(void)
 
     // HAL library initialization.
 
-    HAL_Init();  
-  
+    HAL_Init();
+
     // Configure the system clock.
 
-    SystemClock_Config(); 
+    SystemClock_Config();
 
     // Initialize the NOR.
 
     BSP_QSPI_Init();
 
     // Configure the NOR in memory mapped mode.
-    
+
     BSP_QSPI_EnableMemoryMappedMode();
 
     // Initialize the UART log.
@@ -160,7 +160,7 @@ int main(void)
     rtc_init();
 
     // Initialize mass storage mutex.
-    
+
     osMutexDef(sd_mutex);
     mass_storage_mutex= osMutexCreate(osMutex(sd_mutex));
 
@@ -172,7 +172,7 @@ int main(void)
     // Start scheduler.
 
     osKernelStart();
-  
+
     for( ;; );
 }
 
@@ -187,7 +187,7 @@ int main(void)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 

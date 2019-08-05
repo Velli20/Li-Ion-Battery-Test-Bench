@@ -17,7 +17,7 @@ void Log_Config(void)
     __USART1_RELEASE_RESET();
 
     // Deinit USART1 GPIO pins.
-    
+
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);
 
@@ -52,17 +52,17 @@ void Log_Config(void)
     GPIO_InitStruct.Alternate= GPIO_AF7_USART1;
 
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    
+
     /* UART configured as follows:
-      - Word Length = 8 Bits (7 data bit + 1 parity bit) : 
+      - Word Length = 8 Bits (7 data bit + 1 parity bit) :
 	                  BE CAREFUL : Program 7 data bits + 1 parity bit.
       - Stop Bit    = One Stop bit
       - Parity      = ODD parity
-      - BaudRate    = 9600 baud
+      - BaudRate    = 115200 baud
       - Hardware flow control disabled (RTS and CTS signals) */
 
     UartHandle.Instance=          USART1;
-    UartHandle.Init.BaudRate=     9600;
+    UartHandle.Init.BaudRate=     57600;
     UartHandle.Init.WordLength=   UART_WORDLENGTH_8B;
     UartHandle.Init.StopBits=     UART_STOPBITS_1;
     UartHandle.Init.Parity=       UART_PARITY_NONE;
@@ -85,8 +85,8 @@ void Log_Config(void)
 
 // C std library printf retarget.
 
-int _write(int   file, 
-           char* string, 
+int _write(int   file,
+           char* string,
            int   length)
 {
     HAL_UART_Transmit(&UartHandle, (uint8_t *)string, length, 0xFFFF);
